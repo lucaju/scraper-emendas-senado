@@ -12,7 +12,7 @@ interface DownloadOptions {
 
 const tpl = ':bar {cyan.bold :percent} :etas :filename';
 
-export const downloadFile = async (options: DownloadOptions): Promise<void> => {
+export const downloadFile = async (options: DownloadOptions): Promise<boolean> => {
 	const { url, outputPath, task, filename, onProgress } = options;
 
 	try {
@@ -74,12 +74,14 @@ export const downloadFile = async (options: DownloadOptions): Promise<void> => {
 		}
 
 		// Close the file stream
-		await new Promise<void>((resolve, reject) => {
+		return await new Promise<boolean>((resolve, reject) => {
 			fileStream.end(() => {
 				bar.complete();
-				resolve();
+				resolve(true);
 			});
-			fileStream.on('error', reject);
+			fileStream.on('error', () => {
+				reject(false);
+			});
 		});
 	} catch (error) {
 		// biome-ignore lint/complexity/noUselessCatch: nonsense
