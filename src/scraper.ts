@@ -44,23 +44,21 @@ export const scrapeEmendas = async (materia: string): Promise<void> => {
 		const task = tree.add('Downloading PDFs');
 
 		for (const emenda of emendas) {
-			if (emenda.pdfLink) {
-				const pdfFilename = emenda.id.replace('/', '_').replace(/ /g, '_').toLowerCase().concat('.pdf');
+			if (!emenda.pdfLink) continue;
 
-				const pdfDownloaded = await downloadFile({
-					url: emenda.pdfLink,
-					outputPath: `${resultsFolder}/${materia}/pdfs`,
-					filename: pdfFilename,
-					task,
-				}).catch((error) => {
-					console.error(kleur.red(`Failed to download PDF for emenda ${emenda.id}:`), error);
-					return false;
-				});
+			const pdfFilename = emenda.id.replace('/', '_').replace(/ /g, '_').toLowerCase().concat('.pdf');
 
-				if (pdfDownloaded) {
-					emenda.pdfFilename = pdfFilename;
-				}
-			}
+			const pdfDownloaded = await downloadFile({
+				url: emenda.pdfLink,
+				outputPath: `${resultsFolder}/${materia}/pdfs`,
+				filename: pdfFilename,
+				task,
+			}).catch((error) => {
+				console.error(kleur.red(`Failed to download PDF for emenda ${emenda.id}:`), error);
+				return false;
+			});
+
+			if (pdfDownloaded) emenda.pdfFilename = pdfFilename;
 		}
 
 		task.complete();
