@@ -1,5 +1,4 @@
 import { input } from '@inquirer/prompts';
-import kleur from 'kleur';
 
 export interface InquererProps {
 	materia: string;
