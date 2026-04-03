@@ -1,47 +1,45 @@
 # Scraper de emendas de projetos de lei do Senado Federal
 
-Ferramenta para extrair e baixar emendas de matérias legislativas do Senado Federal Brasileiro, com exportação em JSON/CSV, download opcional de PDFs, junção opcional em um único PDF e um segundo comando para filtrar resultados já extraídos.
+Ferramenta para extrair e baixar emendas de matérias legislativas do Senado Federal Brasileiro, com exportação em JSON/CSV, download opcional de PDFs, junção opcional em um único PDF e um segundo comando para localizar subconjuntos das emendas já extraídas (filtros por autor, data e deliberação).
 
 **Exemplo de projeto de lei:** [https://www25.senado.leg.br/web/atividade/materias/-/materia/157233](https://www25.senado.leg.br/web/atividade/materias/-/materia/157233)
 
 ## Características
 
-- Extração dos dados das emendas a partir do acordeão **Emendas** da página da matéria
-- Download opcional dos PDFs (sequencial), com barras de progresso
-- Opção de gerar um único `combined_output.pdf` com todas as emendas (após o download)
-- Requisições HTTP com tempo limite, `User-Agent` e novas tentativas em falhas transitórias (rede, 429, 502–504)
-- Exportação em JSON e CSV
-- Comando **`filter`**: lê `emendas.json` já gerado, aplica filtros (autor, data, status da deliberação) e grava outra pasta dentro da matéria; pode mesclar só os PDFs filtrados
+- Extração dos dados das emendas da página da matéria
+- Download opcional dos PDFs
+- Opção de gerar um único com todas as emendas (após o download)
+- Exporta em JSON e CSV
 - Interface CLI e prompts interativos (quando não há argumentos suficientes)
 - Organização automática de arquivos sob `resultados/<materia>/`
 
 ## Requisitos
 
-- **Node.js** `>= 22.12.0` (conforme `package.json`)
-- **pnpm** (recomendado; versão indicada em `packageManager`)
+- **Node.js** `>= 22.12.0`
+- **pnpm** (recomendado)
 
 ## Estrutura do projeto
 
 ```text
 src/
 ├── config.ts                 # URL base e pasta de saída padrão
-├── type.ts                   # Tipos Zod (Emenda, opções de filtro)
+├── type.ts                   # Tipos Zod (Emenda, filtros, parâmetros do find)
 ├── utils.ts                  # JSON/CSV, listagem de PDFs, merge
 ├── scraper/
 │   ├── index.ts              # Entrada: `pnpm scrape`
-│   ├── scraper.ts            # Parsing da página (Cheerio)
+│   ├── scraper.ts            # Parsing da página
 │   ├── download.ts           # Download dos PDFs
 │   ├── http.ts               # fetch com timeout e retries
 │   └── setup/                # argv, inquirer, initSetup (config)
-└── filter/
-    ├── index.ts              # Entrada: `pnpm filter`
-    ├── filter-data.ts        # Leitura de emendas.json e filtros
-    └── setup/
+└── find/
+    ├── index.ts              # Entrada: `pnpm find`
+    ├── find.ts               # Leitura de emendas.json e aplicação dos filtros
+    └── setup/                # argv, inquirer, initSetup
 ```
 
 ## Dados extraídos
 
-- **Identificação** da emenda (texto do link/célula, ex.: rótulo da emenda)
+- **Identificação** da emenda
 - **Autor**
 - **Data** de apresentação
 - **Turno** (quando presente na tabela)
@@ -61,15 +59,15 @@ O projeto expõe dois scripts:
 | Comando        | Descrição |
 |----------------|-----------|
 | `pnpm scrape`  | Baixa a página, extrai emendas, grava JSON/CSV e, por padrão, os PDFs |
-| `pnpm filter`  | Lê `resultados/<materia>/emendas.json`, aplica filtros e grava em subpasta |
+| `pnpm find`    | Lê `resultados/<materia>/emendas.json`, aplica filtros e grava em subpasta |
 
 ### Scraper (`pnpm scrape`)
 
 #### Precedência da configuração
 
-1. **`--materia` / `-m`** na linha de comando (se informado, ignora arquivo e prompt)
-2. **`config.json`** no diretório atual (deve conter `"materia"` não vazio); pode incluir também `skipDownloadPdf` e `mergePdf`
-3. **Modo interativo** (`@inquirer/prompts`): matéria, se deseja baixar PDFs e se deseja mesclar em um único arquivo
+1. **`--materia` / `-m`** na linha de comando (se informado, ignora arquivo de configuracao e prompt)
+2. **`config.json`** no diretório raiz (deve conter `"materia"` não vazio); pode incluir opocoes de `skipDownloadPdf` e `mergePdf`
+3. **Modo interativo**: matéria, se deseja baixar PDFs e se deseja mesclar em um único arquivo
 
 #### Opções de linha de comando (scraper)
 
@@ -103,31 +101,27 @@ Depois:
 pnpm scrape
 ```
 
-### Filtro (`pnpm filter`)
+### Find (`pnpm find`)
 
-Usa o arquivo **`resultados/<materia>/emendas.json`** produzido pelo scraper (e os PDFs em `resultados/<materia>/pdfs/` se você usar `--merge_pdf`).
+Usa o arquivo **`resultados/<materia>/emendas.json`** produzido pelo scraper (e os PDFs em `resultados/<materia>/pdfs/`).
 
 - Se **`--materia`** for passada, as opções de filtro vêm dos flags abaixo.
 - Caso contrário, o comando entra no **modo interativo** (matéria, filtros, merge).
 
-#### Opções de linha de comando (filter)
+#### Opções de linha de comando (find)
 
 | Opção | Alias | Descrição |
 |-------|-------|-----------|
 | `--materia` | `-m` | Número da matéria |
 | `--merge_pdf` | `-mp` | Mesclar em `combined_output.pdf` apenas os PDFs das emendas que passaram no filtro |
-| `--filtrar_por_autor` | `-fa` | Substring do autor (case insensitive) |
-| `--filtrar_por_data` | — | Data exata no formato `DD/MM/AAAA` (prefira o nome longo; ver nota abaixo) |
-| `--filtrar_por_deliberacao` | — | Uma de: `acolhida`, `rejeitada`, `retirada` |
-
-**Comportamento com `--materia`:** o Yargs define **`filtrar_por_deliberacao` com padrão `acolhida`**. Ou seja, `pnpm filter -- -m 157233` aplica filtro por deliberação “acolhida” mesmo sem você repetir o flag. Para **outro status**, passe explicitamente `--filtrar_por_deliberacao rejeitada` (ou `retirada`). Para combinar filtros como no prompt interativo (incluindo “todos” / sem filtrar por status), rode **`pnpm filter` sem `--materia`**.
-
-**Alias `-fd`:** em `argv` do filtro, data e deliberação declaram o mesmo alias curto; use **`--filtrar_por_data`** e **`--filtrar_por_deliberacao`** para evitar ambiguidade.
+| `--autor` | `-a` | Substring do autor |
+| `--data` | `-d` | Data exata no formato `DD/MM/AAAA` |
+| `--deliberacao` | `-dl` | Uma de: `acolhida`, `rejeitada`, `retirada` |
 
 Exemplo:
 
 ```bash
-pnpm filter -- --materia 157233 --filtrar_por_deliberacao acolhida --merge_pdf
+pnpm find -- --materia 157233 --deliberacao acolhida --merge_pdf
 ```
 
 ## Saída
@@ -145,14 +139,14 @@ resultados/
     └── combined_output.pdf    # apenas se --mergePdf / mergePdf: true
 ```
 
-### Após o filter
+### Após o find
 
 É criada uma subpasta cujo nome começa com `filtro` e inclui sufixos conforme os critérios (ex.: `filtro-acolhida`):
 
 ```text
 resultados/
 └── 157233/
-    ├── emendas.json           # resultado completo do scraper (inalterado pelo filter)
+    ├── emendas.json           # resultado completo do scraper (inalterado pelo find)
     ├── pdfs/
     └── filtro-acolhida/       # exemplo
         ├── emendas.json
@@ -178,14 +172,6 @@ Campos alinhados ao schema em `src/type.ts`:
 
 `turno`, `deliberacao`, `pdfLink` e `pdfFilename` podem estar ausentes ou vazios conforme a linha na página ou o sucesso do download.
 
-## Funcionamento técnico
-
-- **URL da matéria:** `https://www25.senado.leg.br/web/atividade/materias/-/materia/{NUMERO}` (`DEFAULT_BASE_URL` em `config.ts`)
-- **Parsing HTML** com Cheerio (`table.tabela-emendas` dentro de `#emendas`)
-- **Downloads sequenciais** de PDFs; falhas em um item são registradas e o fluxo segue para os demais
-- **Junção de PDFs:** `pdf-merger-js`
-- **Sem autenticação** (dados públicos)
-
 ## Solução de problemas
 
 ### Erro de conexão
@@ -198,7 +184,7 @@ Campos alinhados ao schema em `src/type.ts`:
 - A estrutura da página pode ter mudado; confira se o bloco de emendas ainda usa as mesmas tabelas.
 - Verifique mensagens de erro no terminal.
 
-### `pnpm filter` sem resultado
+### `pnpm find` sem resultado
 
 - É necessário rodar o scraper antes para existir `resultados/<materia>/emendas.json`.
 - Filtros muito restritivos retornam “nenhuma emenda” e o comando encerra com erro.
@@ -207,7 +193,7 @@ Campos alinhados ao schema em `src/type.ts`:
 
 - Alguns links podem falhar temporariamente; confira o log.
 - Garanta espaço em disco em `resultados/`.
-- Para mesclar, é preciso haver **pelo menos dois** PDFs correspondentes à operação (lista completa no scraper ou subconjunto filtrado no filter).
+- Para mesclar, é preciso haver **pelo menos dois** PDFs correspondentes à operação (lista completa no scraper ou subconjunto filtrado no find).
 
 ### Dependências
 
@@ -218,17 +204,14 @@ pnpm install
 
 ## Tecnologias utilizadas
 
-- **Node.js** (ES modules, `fetch`)
+- **Node.js**
 - **TypeScript**
-- **Cheerio** — HTML
+- **Cheerio** — HTML parser
 - **Yargs** — CLI
 - **Zod** — validação de config e dados
 - **@inquirer/prompts** — prompts interativos
-- **Ora** — spinner no scraper
-- **tasktree-cli** — barras de progresso nos downloads
-- **Kleur** — cores no terminal
 - **pdf-merger-js** — PDF único opcional
-- **Biome** — lint e formatação (`pnpm lint`, `pnpm format`)
+- **Biome** — lint e formatação
 
 ## Licença
 
