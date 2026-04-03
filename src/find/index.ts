@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import kleur from 'kleur';
 import { DEFAULT_RESULTS_FOLDER } from '../config.ts';
 import { getPdfFiles, mergePdfs, saveToCsv, saveToJson } from '../utils.ts';
-import { filterData } from './filter-data.ts';
+import { find } from './find.ts';
 import { initSetup } from './setup/index.ts';
 
 void (async () => {
@@ -14,9 +14,9 @@ void (async () => {
 			return;
 		}
 
-		const data = await filterData(materia, filter);
+		const data = await find(materia, filter);
 		if (!data) {
-			console.error(kleur.red('Erro ao filtrar dados.'));
+			console.error(kleur.red('Emendas não encontradas com os filtros informados.'));
 			process.exitCode = 1;
 			return;
 		}

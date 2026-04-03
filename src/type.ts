@@ -12,7 +12,7 @@ export const emendaSchema = z.object({
 
 export type Emenda = z.infer<typeof emendaSchema>;
 
-export const filterDataSchemaOptions = z.object({
+export const filterOptionsSchema = z.object({
 	autor: z.string().min(3).optional(),
 	data: z
 		.string()
@@ -21,11 +21,11 @@ export const filterDataSchemaOptions = z.object({
 	deliberacao: z.enum(['acolhida', 'rejeitada', 'retirada', 'todos']).optional(),
 });
 
-export type FilterDataOptions = z.infer<typeof filterDataSchemaOptions>;
+export type FilterOptions = z.infer<typeof filterOptionsSchema>;
 
-export const filterParamsSchema = z.object({
+export const findParamsSchema = z.object({
 	mergePdf: z.boolean().optional(),
-	filter: filterDataSchemaOptions.optional(),
+	filter: filterOptionsSchema.optional(),
 });
 
-export type FilterParams = z.infer<typeof filterParamsSchema>;
+export type FIndParams = z.infer<typeof findParamsSchema>;

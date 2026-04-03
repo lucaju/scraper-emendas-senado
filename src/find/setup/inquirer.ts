@@ -1,5 +1,5 @@
 import { confirm, input, select } from '@inquirer/prompts';
-import type { FilterDataOptions } from '../../type.ts';
+import type { FilterOptions } from '../../type.ts';
 import type { SetupOptions } from './index.ts';
 
 export const prompt = async (): Promise<SetupOptions> => {
@@ -21,7 +21,7 @@ export const prompt = async (): Promise<SetupOptions> => {
 			choices: ['acolhida', 'rejeitada', 'retirada', 'nao_filtrado', 'todos'],
 			default: 'todos',
 		})) as 'acolhida' | 'rejeitada' | 'retirada' | 'nao_filtrado' | 'todos',
-	} as FilterDataOptions;
+	} as FilterOptions;
 
 	const mergePdf = await confirm({
 		message: 'Deseja juntar os PDFs em um único arquivo?',

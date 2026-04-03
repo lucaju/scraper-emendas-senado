@@ -1,9 +1,9 @@
 import * as fs from 'node:fs';
 import kleur from 'kleur';
 import { DEFAULT_RESULTS_FOLDER } from '../config.ts';
-import { emendaSchema, type FilterDataOptions } from '../type.ts';
+import { emendaSchema, type FilterOptions } from '../type.ts';
 
-export const filterData = async (materia: string, filter?: FilterDataOptions) => {
+export const find = async (materia: string, filter?: FilterOptions) => {
 	const raw = await fs.promises.readFile(`${DEFAULT_RESULTS_FOLDER}/${materia}/emendas.json`, 'utf8');
 	const emendas = emendaSchema.array().parse(JSON.parse(raw));
 
@@ -38,5 +38,3 @@ export const filterData = async (materia: string, filter?: FilterDataOptions) =>
 
 	return { filteredEmendas, folderName };
 };
-
-// void mergePdf('157233');
