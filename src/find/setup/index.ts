@@ -1,8 +1,8 @@
-import type { FIndParams } from '../../type.ts';
+import type { FilterOptions, FindParams } from '../../type.ts';
 import { argv } from './argv.ts';
 import { prompt } from './inquirer.ts';
 
-export interface SetupOptions extends FIndParams {
+export interface SetupOptions extends FindParams {
 	materia: string;
 }
 
@@ -13,8 +13,8 @@ export const initSetup = async (): Promise<SetupOptions> => {
 		const mergePdf = argv.merge_pdf ?? false;
 		const filter = {
 			autor: argv.autor ?? undefined,
-			data: argv.data ?? undefined,
-			deliberacao: argv.deliberacao as 'acolhida' | 'rejeitada' | 'retirada' | undefined,
+			data_apresentacao: argv.data_apresentacao ?? undefined,
+			deliberacao: argv.deliberacao as FilterOptions['deliberacao'] | undefined,
 		} as const;
 		return { materia, mergePdf, filter };
 	}

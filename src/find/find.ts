@@ -3,6 +3,8 @@ import kleur from 'kleur';
 import { DEFAULT_RESULTS_FOLDER } from '../config.ts';
 import { emendaSchema, type FilterOptions } from '../type.ts';
 
+// 157233
+
 export const find = async (materia: string, filter?: FilterOptions) => {
 	const raw = await fs.promises.readFile(`${DEFAULT_RESULTS_FOLDER}/${materia}/emendas.json`, 'utf8');
 	const emendas = emendaSchema.array().parse(JSON.parse(raw));
@@ -16,16 +18,16 @@ export const find = async (materia: string, filter?: FilterOptions) => {
 			folderName += `-${autorFilter}`;
 			filteredEmendas = filteredEmendas.filter(({ autor }) => autor.toLowerCase().includes(autorFilter));
 		}
-		if (filter.data) {
-			const dataFilter = filter.data;
+		if (filter.data_apresentacao) {
+			const dataFilter = filter.data_apresentacao;
 			folderName += `-${dataFilter}`;
-			filteredEmendas = filteredEmendas.filter(({ data }) => data === dataFilter);
+			filteredEmendas = filteredEmendas.filter(({ dataApresentacao: data }) => data === dataFilter);
 		}
 		if (filter.deliberacao) {
-			const deliberacaoFilter = filter.deliberacao.toLowerCase();
-			folderName += `-${deliberacaoFilter}`;
-			filteredEmendas = filteredEmendas.filter(({ deliberacao }) =>
-				deliberacao?.toLowerCase().includes(deliberacaoFilter),
+			const deliberacaoFilter = filter.deliberacao as string[];
+			folderName += `-${deliberacaoFilter.join('+').toLowerCase().replaceAll(' ', '_')}`;
+			filteredEmendas = filteredEmendas.filter(
+				({ deliberacao }) => deliberacao && deliberacaoFilter.includes(deliberacao.toLowerCase()),
 			);
 		}
 	}

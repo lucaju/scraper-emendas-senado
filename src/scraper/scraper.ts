@@ -31,9 +31,9 @@ export const scrapeEmendas = async (materia: string, options?: { log?: boolean }
 			emendas.slice(0, 3).forEach((emenda, i) => {
 				console.log(`\n${i + 1}. ${emenda.id}`);
 				console.log(kleur.blue(`   Autor: ${emenda.autor}`));
-				console.log(kleur.blue(`   Data de apresentação: ${emenda.data}`));
+				console.log(kleur.blue(`   Data de apresentação: ${emenda.dataApresentacao}`));
 				console.log(kleur.blue(`   Turno: ${emenda.turno}`));
-				console.log(kleur.blue(`   Histórico: ${emenda.deliberacao}`));
+				console.log(kleur.blue(`   Histórico: ${emenda.historicoDeliberacao}`));
 				console.log(kleur.blue(`   PDF: ${emenda.pdfFilename ?? 'N/A'}`));
 			});
 		}
@@ -91,7 +91,7 @@ const processPage = async (url: string): Promise<Emenda[]> => {
 
 		if (!id || !autor || !data) continue;
 
-		emendas.push({ id, autor, data, turno, deliberacao, pdfLink, pdfFilename });
+		emendas.push({ id, autor, dataApresentacao: data, turno, historicoDeliberacao: deliberacao, pdfLink, pdfFilename });
 	}
 
 	return emendas;

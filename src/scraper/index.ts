@@ -3,6 +3,7 @@ import kleur from 'kleur';
 import { DEFAULT_RESULTS_FOLDER } from '../config.ts';
 import { getPdfFiles, mergePdfs, saveToCsv, saveToJson } from '../utils.ts';
 import { download } from './download.ts';
+import { parsing } from './parsing.ts';
 import { scrapeEmendas } from './scraper.ts';
 import { initSetup } from './setup/index.ts';
 
@@ -18,15 +19,18 @@ void (async () => {
 		const emendas = await scrapeEmendas(materia, { log: true });
 		if (!emendas) process.exitCode = 1;
 
+		//parsingg
+		const parsedEmendas = await parsing(emendas);
+
 		// Save to both JSON and CSV
 		console.log('\n');
 		fs.mkdirSync(`${DEFAULT_RESULTS_FOLDER}/${materia}`, { recursive: true });
-		saveToJson(emendas, `${DEFAULT_RESULTS_FOLDER}/${materia}/emendas.json`);
-		saveToCsv(emendas, `${DEFAULT_RESULTS_FOLDER}/${materia}/emendas.csv`);
+		saveToJson(parsedEmendas, `${DEFAULT_RESULTS_FOLDER}/${materia}/emendas.json`);
+		saveToCsv(parsedEmendas, `${DEFAULT_RESULTS_FOLDER}/${materia}/emendas.csv`);
 
 		// Download PDFs
 		if (!skipDownloadPdf) {
-			await download(materia, emendas);
+			await download(materia, parsedEmendas);
 		}
 
 		// Merge PDFs

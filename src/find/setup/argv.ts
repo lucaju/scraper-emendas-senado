@@ -26,7 +26,7 @@ export const argv = yargs(hideBin(process.argv))
 			string: true,
 			description: 'Filtrar por autor.',
 		},
-		data: {
+		data_apresentacao: {
 			alias: 'd',
 			string: true,
 			regex: /^\d{2}\/\d{2}\/\d{4}$/,
@@ -34,9 +34,10 @@ export const argv = yargs(hideBin(process.argv))
 		},
 		deliberacao: {
 			alias: 'dl',
-			choices: ['acolhida', 'rejeitada', 'retirada'],
-			default: 'acolhida',
-			description: 'Filtrar por status da emenda (acolhida, rejeitada ou retirada).',
+			choices: ['acolhida', 'acolhida parcialmente', 'rejeitada', 'retirada'],
+			default: ['acolhida'],
+			description: 'Filtrar por status da emenda (acolhida, acolhida parcialmente, rejeitada ou retirada).',
+			multiple: true,
 		},
 	})
 	.parseSync();

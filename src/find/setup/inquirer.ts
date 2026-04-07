@@ -1,4 +1,4 @@
-import { confirm, input, select } from '@inquirer/prompts';
+import { checkbox, confirm, input } from '@inquirer/prompts';
 import type { FilterOptions } from '../../type.ts';
 import type { SetupOptions } from './index.ts';
 
@@ -13,15 +13,19 @@ export const prompt = async (): Promise<SetupOptions> => {
 		autor: await input({
 			message: 'Filtrar por autor',
 		}),
-		data: await input({
+		data_apresentacao: await input({
 			message: 'Filtrar por data',
 		}),
-		deliberacao: (await select({
+		deliberacao: await checkbox({
 			message: 'Filtrar por status da emenda',
-			choices: ['acolhida', 'rejeitada', 'retirada', 'nao_filtrado', 'todos'],
-			default: 'todos',
-		})) as 'acolhida' | 'rejeitada' | 'retirada' | 'nao_filtrado' | 'todos',
-	} as FilterOptions;
+			choices: [
+				{ name: 'acolhida', value: 'acolhida' },
+				{ name: 'acolhida parcialmente', value: 'acolhida parcialmente' },
+				{ name: 'rejeitada', value: 'rejeitada' },
+				{ name: 'retirada', value: 'retirada' },
+			],
+		}),
+	} satisfies FilterOptions;
 
 	const mergePdf = await confirm({
 		message: 'Deseja juntar os PDFs em um único arquivo?',
